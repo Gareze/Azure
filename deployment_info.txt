@@ -1,0 +1,111 @@
+Create a Azure bicep template for the following resources to deploy into azure subscription 'devops-dev':
+
+Resource Group: devops-ai-rg-dev
+Location: North Europe
+Tags:
+Owner: DevOps
+Environment: Development
+Function: AI Services
+
+New subnet 'devops-ai-snet' with IP range 10.37.0.0/24 in exisitng vnet 'devops-dev'
+Tags:
+Owner: DevOps
+Environment: Development
+Function: AI Services
+
+Two virtual machines running Ubuntu 24.04 both should be located in resource group devops-ai-rg-dev and use username 'integ-admin' and generate ssh-key.
+No Public IPs, no NSGs and they should both be connected to subnet 'devops-ai-snet'.
+VM1:
+Name: devops-openweb-vm-dev
+Static IP: 10.37.0.4
+
+VM2:
+Name: devops-llm-vm-dev
+Static IP: 10.37.0.5
+
+create two new NSG for the virtual machines with the following config.
+NSG1:
+Name: devops-openweb-nsg-dev
+Attached to VM: devops-openweb-vm-dev
+Rules:
+Rule ID: 100
+	Name: Allow-SSH-To-VM
+	Direction: Inbound
+	Access: Allow
+	Protocol: tcp
+	Source IP: Any
+	Destnation IP: 10.37.0.4
+	Destination port: 22
+Rule ID: 101
+	Name: Allow-HTTP-To-VM
+	Direction: Inbound
+	Access: Allow
+	Protocol: tcp
+	Source IP: Any
+	Destnation IP: 10.37.0.4
+	Destination port: 80
+Rule ID: 100
+	Name: Allow-DNS-From-VM
+	Direction: Outbound
+	Access: Allow
+	Protocol: udp
+	Source IP: Any
+	Destnation IP: 8.8.8.8,4.4.2.2
+	Destination port: 53
+Rule ID: 101
+	Name: Allow-Update-From-VM
+	Direction: Outbound
+	Access: Allow
+	Protocol: tcp
+	Source IP: Any
+	Destnation IP: Internet
+	Destination port: 80,443
+Rule ID: 101
+	Name: Allow-HTTP-From-VM
+	Direction: Outbound
+	Access: Allow
+	Protocol: tcp
+	Source IP: Any
+	Destnation IP: 10.37.0.5
+	Destination port: 80
+
+NSG2:
+Name: devops-llm-nsg-dev
+Attached to VM: devops-llm-vm-dev
+Rules:
+Rule ID: 100
+	Name: Allow-SSH-To-VM
+	Direction: Inbound
+	Access: Allow
+	Protocol: tcp
+	Source IP: Any
+	Destnation IP: 10.37.0.4
+	Destination port: 22
+Rule ID: 101
+	Name: Allow-HTTP-To-VM
+	Direction: Inbound
+	Access: Allow
+	Protocol: tcp
+	Source IP: 10.37.0.4
+	Destnation IP: 10.37.0.5
+	Destination port: 80
+Rule ID: 100
+	Name: Allow-DNS-From-VM
+	Direction: Outbound
+	Access: Allow
+	Protocol: udp
+	Source IP: Any
+	Destnation IP: 8.8.8.8,4.4.2.2
+	Destination port: 53
+Rule ID: 101
+	Name: Allow-Update-From-VM
+	Direction: Outbound
+	Access: Allow
+	Protocol: tcp
+	Source IP: Any
+	Destnation IP: Internet
+	Destination port: 80,443
+	
+Create Azure Open AI instance 'devops-openai-dev' using resource group 'devops-ai-rg-dev' and region 'West Europe', disable network access and connect it as a private endpoint to subnet 'devops-ai-snet' and create the azure private dns zone for it.
+
+Deploy the AI model 'gpt-4.1-nano' using 'Data Zone Standard' and Region 'West Europe', limit it to 10k tokens per minute.
